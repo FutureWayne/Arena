@@ -20,7 +20,7 @@ void UMenu::MenuSetup(int32 InNumPublicConnections, const FString& InMatchType, 
 	{
 		if (APlayerController* PlayerController = World->GetFirstPlayerController())
 		{
-			FInputModeGameAndUI InputModeData;
+			FInputModeUIOnly InputModeData;
 			InputModeData.SetWidgetToFocus(TakeWidget());
 			InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 			PlayerController->SetInputMode(InputModeData);
