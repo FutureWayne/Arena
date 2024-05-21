@@ -11,6 +11,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Weapon/Weapon.h"
 
@@ -93,11 +94,28 @@ bool ABlasterCharacter::IsAiming() const
 	return (Combat && Combat->bIsAiming);
 }
 
+AWeapon* ABlasterCharacter::GetEquippedWeapon() const
+{
+	if (Combat)
+	{
+		return Combat->EquippedWeapon;
+	}
+
+	return nullptr;
+}
+
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+void ABlasterCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	AimOffset(DeltaSeconds);
 }
 
 void ABlasterCharacter::Move(const FInputActionValue& Value)
@@ -191,6 +209,41 @@ void ABlasterCharacter::AimButtonReleased()
 	if (Combat)
 	{
 		Combat->SetAiming(false);
+	}
+}
+
+void ABlasterCharacter::AimOffset(float DeltaSeconds)
+{
+	if (Combat && Combat->EquippedWeapon == nullptr)
+	{
+		return;
+	}
+
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.0f;
+	const float Speed = Velocity.Size();
+	const bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	if (Speed == 0.0f && !bIsInAir)
+	{
+		const FRotator CurrentAimLocation = FRotator(0.0f, GetControlRotation().Yaw, 0.0f);
+		const FRotator DeltaAimLocation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimLocation, StartingAimRotation);
+		AO_Yaw = DeltaAimLocation.Yaw;
+		bUseControllerRotationYaw = false;
+	}
+
+	if (Speed > 0.0f || bIsInAir)
+	{
+		StartingAimRotation = FRotator(0.0f, GetControlRotation().Yaw, 0.0f);
+		AO_Yaw = 0.0f;
+		bUseControllerRotationYaw = true;
+	}
+
+	AO_Pitch = GetBaseAimRotation().Pitch;
+	if (AO_Pitch > 90.f && !IsLocallyControlled())
+	{
+		// map pitch from [270, 360] to [-90, 0]
+		AO_Pitch = FMath::Clamp(AO_Pitch, 270.f, 360.f) - 360.f;
 	}
 }
 

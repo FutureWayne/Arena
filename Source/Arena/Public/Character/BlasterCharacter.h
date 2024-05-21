@@ -31,10 +31,13 @@ public:
 
 	bool IsWeaponEquipped() const;
 	bool IsAiming() const;
+	AWeapon* GetEquippedWeapon() const;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
 
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -50,6 +53,8 @@ protected:
 
 	void AimButtonPressed();
 	void AimButtonReleased();
+
+	void AimOffset(float DeltaSeconds);
 	
 private:
 	/** Camera boom positioning the camera behind the character */
@@ -110,7 +115,13 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(const AWeapon* LastWeapon) const;
 
+	float AO_Yaw;
+	float AO_Pitch;
+	FRotator StartingAimRotation;
+
 public:
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE float GetAOYaw() const { return AO_Yaw; }
+	FORCEINLINE float GetAOPitch() const { return AO_Pitch; }
 };
