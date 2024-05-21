@@ -29,6 +29,9 @@ public:
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
 
+	bool IsWeaponEquipped() const;
+	bool IsAiming() const;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -39,9 +42,14 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-	void EquipWeapon();
+	void EquipButtonPressed();
 
-	void DropWeapon();
+	void DropButtonPressed();
+
+	void CrouchButtonPressed();
+
+	void AimButtonPressed();
+	void AimButtonReleased();
 	
 private:
 	/** Camera boom positioning the camera behind the character */
@@ -76,6 +84,14 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* DropAction;
 
+	/** Crouch Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* CrouchAction;
+
+	/** Aim Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* AimAction;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
 	class UWidgetComponent* OverheadWidget;
 
@@ -86,10 +102,10 @@ private:
 	TObjectPtr<UCombatComponent> Combat;
 
 	UFUNCTION(Server, Reliable)
-	void ServerEquipWeapon();
+	void ServerEquipButtonPressed();
 
 	UFUNCTION(Server, Reliable)
-	void ServerDropWeapon();
+	void ServerDropButtonPressed();
 
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(const AWeapon* LastWeapon) const;

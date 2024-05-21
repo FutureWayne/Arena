@@ -19,6 +19,7 @@ public:
 	UCombatComponent();
 	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	friend class ABlasterCharacter;
 
@@ -29,9 +30,21 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	
+	void SetAiming(bool bNewAiming);
+
+	UFUNCTION(Server, Reliable)
+	void ServerSetAiming(bool bNewAiming);
+
+	UFUNCTION()
+	void OnRep_EquippedWeapon();
 
 private:
 	TObjectPtr<ABlasterCharacter> OwningCharacter;
+
+	UPROPERTY(Replicated, ReplicatedUsing = OnRep_EquippedWeapon)
 	TObjectPtr<AWeapon> EquippedWeapon;
-		
+
+	UPROPERTY(Replicated)
+	bool bIsAiming;
 };

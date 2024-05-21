@@ -37,6 +37,7 @@ ABlasterCharacter::ABlasterCharacter()
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -82,6 +83,16 @@ void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 	}
 }
 
+bool ABlasterCharacter::IsWeaponEquipped() const
+{
+	return (Combat && Combat->EquippedWeapon != nullptr);
+}
+
+bool ABlasterCharacter::IsAiming() const
+{
+	return (Combat && Combat->bIsAiming);
+}
+
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
 {
@@ -125,7 +136,7 @@ void ABlasterCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void ABlasterCharacter::EquipWeapon()
+void ABlasterCharacter::EquipButtonPressed()
 {
 	if (Combat)
 	{
@@ -135,12 +146,12 @@ void ABlasterCharacter::EquipWeapon()
 		}
 		else
 		{
-			ServerEquipWeapon();
+			ServerEquipButtonPressed();
 		}
 	}
 }
 
-void ABlasterCharacter::DropWeapon()
+void ABlasterCharacter::DropButtonPressed()
 {
 	if (Combat)
 	{
@@ -150,8 +161,36 @@ void ABlasterCharacter::DropWeapon()
 		}
 		else
 		{
-			ServerDropWeapon();
+			ServerDropButtonPressed();
 		}
+	}
+}
+
+void ABlasterCharacter::CrouchButtonPressed()
+{
+	if (bIsCrouched)
+	{
+		UnCrouch();
+	}
+	else
+	{
+		Crouch();
+	}
+}
+
+void ABlasterCharacter::AimButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->SetAiming(true);
+	}
+}
+
+void ABlasterCharacter::AimButtonReleased()
+{
+	if (Combat)
+	{
+		Combat->SetAiming(false);
 	}
 }
 
@@ -181,10 +220,17 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Look);
 
 		// Equipping
-		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::EquipWeapon);
+		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::EquipButtonPressed);
 
 		// Dropping
-		EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::DropWeapon);
+		EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::DropButtonPressed);
+
+		// Crouching
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchButtonPressed);
+
+		// Aiming
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ABlasterCharacter::AimButtonPressed);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ABlasterCharacter::AimButtonReleased);
 	}
 }
 
@@ -197,7 +243,7 @@ void ABlasterCharacter::PostInitializeComponents()
 	}
 }
 
-void ABlasterCharacter::ServerEquipWeapon_Implementation()
+void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (Combat)
 	{
@@ -205,7 +251,7 @@ void ABlasterCharacter::ServerEquipWeapon_Implementation()
 	}
 }
 
-void ABlasterCharacter::ServerDropWeapon_Implementation()
+void ABlasterCharacter::ServerDropButtonPressed_Implementation()
 {
 	if (Combat)
 	{

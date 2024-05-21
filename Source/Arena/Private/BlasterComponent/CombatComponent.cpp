@@ -6,6 +6,8 @@
 #include "Character/BlasterCharacter.h"
 #include "Components/SphereComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "Weapon/Weapon.h"
 
 // Sets default values for this component's properties
@@ -28,6 +30,25 @@ void UCombatComponent::BeginPlay()
 	
 }
 
+void UCombatComponent::SetAiming(const bool bNewAiming)
+{
+	bIsAiming = bNewAiming;
+	ServerSetAiming(bNewAiming);
+}
+
+void UCombatComponent::OnRep_EquippedWeapon()
+{
+	if (EquippedWeapon && OwningCharacter)
+	{
+		OwningCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
+		OwningCharacter->bUseControllerRotationYaw = true;
+	}
+}
+
+void UCombatComponent::ServerSetAiming_Implementation(const bool bNewAiming)
+{
+	bIsAiming = bNewAiming;
+}
 
 // Called every frame
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -35,6 +56,14 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+}
+
+void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, bIsAiming);
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
@@ -47,7 +76,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 
-	if (const USkeletalMeshSocket* WeaponSocket = OwningCharacter->GetMesh()->GetSocketByName("Weapon_R"))
+	if (const USkeletalMeshSocket* WeaponSocket = OwningCharacter->GetMesh()->GetSocketByName(FName("weapon_r")))
 	{
 		WeaponSocket->AttachActor(EquippedWeapon, OwningCharacter->GetMesh());
 	}
@@ -55,6 +84,9 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	EquippedWeapon->GetAreaSphere()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	EquippedWeapon->ShowPickupWidget(false);
 	EquippedWeapon->SetOwner(OwningCharacter);
+
+	OwningCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
+	OwningCharacter->bUseControllerRotationYaw = true;
 }
 
 void UCombatComponent::DropWeapon()
