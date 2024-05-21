@@ -24,6 +24,9 @@ public:
 	void ShowPlayerNetRole(APawn* InPawn);
 
 	UFUNCTION(BlueprintCallable)
+	void ShowPlayerLocalRole(APawn* InPawn);
+
+	UFUNCTION(BlueprintCallable)
 	void ShowPlayerName(APawn* InPawn);
 
 protected:

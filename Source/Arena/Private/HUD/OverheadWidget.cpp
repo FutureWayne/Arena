@@ -38,6 +38,30 @@ void UOverheadWidget::ShowPlayerNetRole(APawn* InPawn)
 	SetDisplayText(RemoteRoleString);
 }
 
+void UOverheadWidget::ShowPlayerLocalRole(APawn* InPawn)
+{
+	const ENetRole LocalRole = InPawn->GetLocalRole();
+	FString Role;
+	switch (LocalRole)
+	{
+	case ROLE_Authority:
+		Role = FString("Authority");
+		break;
+	case ROLE_AutonomousProxy:
+		Role = FString("AutonomousProxy");
+		break;
+	case ROLE_SimulatedProxy:
+		Role = FString("SimulatedProxy");
+		break;
+	default:
+		Role = FString("None");
+		break;
+	}
+
+	const FString LocalRoleString = FString::Printf(TEXT("Local Role: %s"), *Role);
+	SetDisplayText(LocalRoleString);
+}
+
 void UOverheadWidget::ShowPlayerName(APawn* InPawn)
 {
 	if (APlayerState* PlayerState = InPawn->GetPlayerState())
