@@ -41,7 +41,6 @@ void UCombatComponent::OnRep_EquippedWeapon()
 	if (EquippedWeapon && OwningCharacter)
 	{
 		OwningCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
-		OwningCharacter->bUseControllerRotationYaw = true;
 	}
 }
 
@@ -75,18 +74,18 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-
+	EquippedWeapon->GetWeaponMesh()->SetSimulatePhysics(false);
+	EquippedWeapon->GetWeaponMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	EquippedWeapon->GetAreaSphere()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	EquippedWeapon->ShowPickupWidget(false);
+	EquippedWeapon->SetOwner(OwningCharacter);
+	
 	if (const USkeletalMeshSocket* WeaponSocket = OwningCharacter->GetMesh()->GetSocketByName(FName("weapon_r")))
 	{
 		WeaponSocket->AttachActor(EquippedWeapon, OwningCharacter->GetMesh());
 	}
-
-	EquippedWeapon->GetAreaSphere()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	EquippedWeapon->ShowPickupWidget(false);
-	EquippedWeapon->SetOwner(OwningCharacter);
-
+	
 	OwningCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
-	OwningCharacter->bUseControllerRotationYaw = true;
 }
 
 void UCombatComponent::DropWeapon()
@@ -96,11 +95,17 @@ void UCombatComponent::DropWeapon()
 		return;
 	}
 
-	// TODO: Add physics simulation to the weapon
+	OwningCharacter->GetCharacterMovement()->bOrientRotationToMovement = true;
 	
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Dropped);
-	EquippedWeapon->GetAreaSphere()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	EquippedWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	EquippedWeapon->GetAreaSphere()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	EquippedWeapon->GetWeaponMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	EquippedWeapon->GetWeaponMesh()->SetSimulatePhysics(true);
+
+	// Add a force to the weapon, using the character's aim rotation
+	const FVector ForceVector = OwningCharacter->GetBaseAimRotation().Vector() * 400.f;
+	EquippedWeapon->GetWeaponMesh()->AddImpulse(ForceVector, NAME_None, true);
 	EquippedWeapon->SetOwner(nullptr);
 	EquippedWeapon = nullptr;
 }

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "Arena/ArenaTypes/TurnInPlace.h"
 #include "BlasterAnimInstance.generated.h"
 
 /**
@@ -57,6 +58,9 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = true))
 	FTransform LeftHandTransform;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = true))
+	ETurnInPlaceDirection TurnInPlace;
 	
 	FRotator CharacterRotationLastFrame;
 	FRotator CharacterRotation;

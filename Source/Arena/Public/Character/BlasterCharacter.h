@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Arena/ArenaTypes/TurnInPlace.h"
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
 
@@ -116,12 +117,17 @@ private:
 	void OnRep_OverlappingWeapon(const AWeapon* LastWeapon) const;
 
 	float AO_Yaw;
+	float Interp_AO_Yaw;
 	float AO_Pitch;
 	FRotator StartingAimRotation;
+	ETurnInPlaceDirection TurnInPlaceDirection;
+
+	void TurnInPlace(float DeltaSeconds);
 
 public:
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE float GetAOYaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAOPitch() const { return AO_Pitch; }
+	FORCEINLINE ETurnInPlaceDirection GetTurnInPlaceDirection() const { return TurnInPlaceDirection; }
 };

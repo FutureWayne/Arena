@@ -56,6 +56,8 @@ ABlasterCharacter::ABlasterCharacter()
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
+
+	TurnInPlaceDirection = ETurnInPlaceDirection::ETIP_NotTurning;
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -158,14 +160,7 @@ void ABlasterCharacter::EquipButtonPressed()
 {
 	if (Combat)
 	{
-		if (HasAuthority())
-		{
-			Combat->EquipWeapon(OverlappingWeapon);
-		}
-		else
-		{
-			ServerEquipButtonPressed();
-		}
+		ServerEquipButtonPressed();
 	}
 }
 
@@ -173,14 +168,7 @@ void ABlasterCharacter::DropButtonPressed()
 {
 	if (Combat)
 	{
-		if (HasAuthority())
-		{
-			Combat->DropWeapon();
-		}
-		else
-		{
-			ServerDropButtonPressed();
-		}
+		ServerDropButtonPressed();
 	}
 }
 
@@ -229,7 +217,12 @@ void ABlasterCharacter::AimOffset(float DeltaSeconds)
 		const FRotator CurrentAimLocation = FRotator(0.0f, GetControlRotation().Yaw, 0.0f);
 		const FRotator DeltaAimLocation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimLocation, StartingAimRotation);
 		AO_Yaw = DeltaAimLocation.Yaw;
-		bUseControllerRotationYaw = false;
+		if (TurnInPlaceDirection == ETurnInPlaceDirection::ETIP_NotTurning)
+		{
+			Interp_AO_Yaw = AO_Yaw;
+		}
+		bUseControllerRotationYaw = true;
+		TurnInPlace(DeltaSeconds);
 	}
 
 	if (Speed > 0.0f || bIsInAir)
@@ -237,6 +230,7 @@ void ABlasterCharacter::AimOffset(float DeltaSeconds)
 		StartingAimRotation = FRotator(0.0f, GetControlRotation().Yaw, 0.0f);
 		AO_Yaw = 0.0f;
 		bUseControllerRotationYaw = true;
+		TurnInPlaceDirection = ETurnInPlaceDirection::ETIP_NotTurning;
 	}
 
 	AO_Pitch = GetBaseAimRotation().Pitch;
@@ -302,6 +296,8 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 	{
 		Combat->EquipWeapon(OverlappingWeapon);
 	}
+
+	StartingAimRotation = FRotator(0.0f, GetControlRotation().Yaw, 0.0f);
 }
 
 void ABlasterCharacter::ServerDropButtonPressed_Implementation()
@@ -323,6 +319,29 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(const AWeapon* LastWeapon) const
 	if (LastWeapon)
 	{
 		LastWeapon->ShowPickupWidget(false);
+	}
+}
+
+void ABlasterCharacter::TurnInPlace(float DeltaSeconds)
+{
+	if (AO_Yaw > 90.0f)
+	{
+		TurnInPlaceDirection = ETurnInPlaceDirection::ETIP_Right;
+	}
+	else if (AO_Yaw < -90.0f)
+	{
+		TurnInPlaceDirection = ETurnInPlaceDirection::ETIP_Left;
+	}
+
+	if (TurnInPlaceDirection != ETurnInPlaceDirection::ETIP_NotTurning)
+	{
+		Interp_AO_Yaw = FMath::FInterpTo(Interp_AO_Yaw, 0.f, DeltaSeconds, 5.0f);
+		AO_Yaw = Interp_AO_Yaw;
+		if (FMath::Abs(AO_Yaw) < 15.f)
+		{
+			TurnInPlaceDirection = ETurnInPlaceDirection::ETIP_NotTurning;
+			StartingAimRotation = FRotator(0.0f, GetControlRotation().Yaw, 0.0f);
+		}
 	}
 }
 
