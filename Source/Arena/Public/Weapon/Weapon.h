@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
+class ACasing;
+
 UENUM(BlueprintType)
 enum class EWeaponState : uint8
 {
@@ -29,6 +31,26 @@ public:
 
 	void ShowPickupWidget(bool bShow) const;
 
+	virtual void Fire(const FVector& HitTarget);
+
+	UPROPERTY(EditAnywhere, Category = "Crosshair")
+	TObjectPtr<UTexture2D> CrosshairCenter;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshair")
+	TObjectPtr<UTexture2D> CrosshairLeft;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshair")
+	TObjectPtr<UTexture2D> CrosshairRight;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshair")
+	TObjectPtr<UTexture2D> CrosshairTop;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshair")
+	TObjectPtr<UTexture2D> CrosshairBottom;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	TSubclassOf<ACasing> CasingClass;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -48,6 +70,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon")
 	TObjectPtr<class UWidgetComponent> PickupWidget;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	TObjectPtr<UAnimationAsset> FireAnimation;
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon")
 	EWeaponState WeaponState;

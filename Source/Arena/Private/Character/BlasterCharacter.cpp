@@ -32,9 +32,11 @@ ABlasterCharacter::ABlasterCharacter()
 
 	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
 	// instead of recompiling to adjust them
+	DefaultJogSpeed = 500.0f;
+	DefaultWalkSpeed = 250.0f;
 	GetCharacterMovement()->JumpZVelocity = 700.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MaxWalkSpeed = DefaultJogSpeed;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -58,6 +60,9 @@ ABlasterCharacter::ABlasterCharacter()
 	Combat->SetIsReplicated(true);
 
 	TurnInPlaceDirection = ETurnInPlaceDirection::ETIP_NotTurning;
+
+	NetUpdateFrequency = 66.0f;
+	MinNetUpdateFrequency = 33.0f;
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -104,6 +109,29 @@ AWeapon* ABlasterCharacter::GetEquippedWeapon() const
 	}
 
 	return nullptr;
+}
+
+void ABlasterCharacter::PlayFireMontage()
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr)
+	{
+		return;
+	}
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && FireWeaponMontage)
+	{
+		AnimInstance->Montage_Play(FireWeaponMontage);
+	}
+}
+
+FVector ABlasterCharacter::GetHitTarget() const
+{
+	if (Combat == nullptr)
+	{
+		return FVector::ZeroVector;
+	}
+	return Combat->HitTarget;
 }
 
 // Called when the game starts or when spawned
@@ -241,6 +269,32 @@ void ABlasterCharacter::AimOffset(float DeltaSeconds)
 	}
 }
 
+void ABlasterCharacter::FireButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->FireButtonPressed(true);
+	}
+}
+
+void ABlasterCharacter::FireButtonReleased()
+{
+	if (Combat)
+	{
+		Combat->FireButtonPressed(false);
+	}
+}
+
+void ABlasterCharacter::WalkButtonPressed()
+{
+	GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
+}
+
+void ABlasterCharacter::WalkButtonReleased()
+{
+	GetCharacterMovement()->MaxWalkSpeed = DefaultJogSpeed;
+}
+
 // Called to bind functionality to input
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -278,6 +332,14 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		// Aiming
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ABlasterCharacter::AimButtonPressed);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ABlasterCharacter::AimButtonReleased);
+
+		// Firing
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ABlasterCharacter::FireButtonPressed);
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &ABlasterCharacter::FireButtonReleased);
+
+		// Walking
+		EnhancedInputComponent->BindAction(WalkAction, ETriggerEvent::Started, this, &ABlasterCharacter::WalkButtonPressed);
+		EnhancedInputComponent->BindAction(WalkAction, ETriggerEvent::Completed, this, &ABlasterCharacter::WalkButtonReleased);
 	}
 }
 

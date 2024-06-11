@@ -7,54 +7,17 @@
 #include "Components/SphereComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "HUD/BlasterHUD.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "PlayerController/BlasterPlayerController.h"
 #include "Weapon/Weapon.h"
 
-// Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = false;
-
-	// ...
-}
-
-
-// Called when the game starts
-void UCombatComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	// ...
-	
-}
-
-void UCombatComponent::SetAiming(const bool bNewAiming)
-{
-	bIsAiming = bNewAiming;
-	ServerSetAiming(bNewAiming);
-}
-
-void UCombatComponent::OnRep_EquippedWeapon()
-{
-	if (EquippedWeapon && OwningCharacter)
-	{
-		OwningCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
-	}
-}
-
-void UCombatComponent::ServerSetAiming_Implementation(const bool bNewAiming)
-{
-	bIsAiming = bNewAiming;
-}
-
-// Called every frame
-void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	PrimaryComponentTick.bCanEverTick = true;
+	bIsAiming = false;
+	bFireButtonPressed = false;
 }
 
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -63,6 +26,182 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bIsAiming);
+}
+
+
+void UCombatComponent::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+// Called every frame
+void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	SetHUDCrosshair(DeltaTime);
+
+	if (OwningCharacter && OwningCharacter->IsLocallyControlled())
+	{
+		FHitResult HitResult;
+		TraceUnderCrosshair(HitResult);
+		HitTarget = HitResult.ImpactPoint;
+	}
+}
+
+void UCombatComponent::SetAiming(const bool bNewAiming)
+{
+	bIsAiming = bNewAiming;
+	ServerSetAiming(bNewAiming);
+}
+
+void UCombatComponent::OnRep_EquippedWeapon() const
+{
+	if (EquippedWeapon && OwningCharacter)
+	{
+		OwningCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
+	}
+}
+
+void UCombatComponent::TraceUnderCrosshair(FHitResult& HitResult) const
+{
+	FVector2D ViewportSize;
+	if (GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(ViewportSize);
+	}
+
+	FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
+	FVector CrossHairWorldPosition;
+	FVector CrossHairWorldDirection;
+	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
+		UGameplayStatics::GetPlayerController(this, 0),
+		CrosshairLocation,
+		CrossHairWorldPosition,
+		CrossHairWorldDirection);
+
+	if (bScreenToWorld)
+	{
+		FVector Start = CrossHairWorldPosition;
+		FVector End = Start + CrossHairWorldDirection * TRACE_LENGTH;
+
+		GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			Start,
+			End,
+			ECC_Visibility);
+
+		if (!HitResult.bBlockingHit)
+		{
+			HitResult.ImpactPoint = End;
+		}
+		else
+		{
+			DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.f, 12, FColor::Red, false);
+		}
+	}
+}
+
+void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
+{
+	MulticastFire(TraceHitTarget);
+}
+
+void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
+{
+	if (EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	
+	if (OwningCharacter)
+	{
+		OwningCharacter->PlayFireMontage();
+		EquippedWeapon->Fire(TraceHitTarget);
+	}
+}
+
+void UCombatComponent::FireButtonPressed(bool bPressed)
+{
+	bFireButtonPressed = bPressed;
+
+	if (bFireButtonPressed)
+	{
+		FHitResult HitResult;
+		TraceUnderCrosshair(HitResult);
+		ServerFire(HitResult.ImpactPoint);
+	}
+}
+
+void UCombatComponent::SetHUDCrosshair(float DeltaTime)
+{
+	if (OwningCharacter == nullptr || OwningCharacter->Controller == nullptr)
+	{
+		return;
+	}
+
+	if (OwningController == nullptr)
+	{
+		OwningController = Cast<ABlasterPlayerController>(OwningCharacter->Controller);
+	}
+	
+	if (OwningController)
+	{
+		if (OwningHUD == nullptr)
+		{
+			OwningHUD = Cast<ABlasterHUD>(OwningController->GetHUD());
+		}
+		
+		if (OwningHUD)
+		{
+			FHUDPackage HUDPackage;
+			if (EquippedWeapon)
+			{
+				HUDPackage.CrosshairCenter = EquippedWeapon->CrosshairCenter;
+				HUDPackage.CrosshairLeft = EquippedWeapon->CrosshairLeft;
+				HUDPackage.CrosshairRight = EquippedWeapon->CrosshairRight;
+				HUDPackage.CrosshairTop = EquippedWeapon->CrosshairTop;
+				HUDPackage.CrosshairBottom = EquippedWeapon->CrosshairBottom;
+			}
+			else
+			{
+				HUDPackage.CrosshairCenter = nullptr;
+				HUDPackage.CrosshairLeft = nullptr;
+				HUDPackage.CrosshairRight = nullptr;
+				HUDPackage.CrosshairTop = nullptr;
+				HUDPackage.CrosshairBottom = nullptr;
+			}
+
+			// Calculate crosshair spread
+			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetOwner());
+			if (BlasterCharacter != nullptr)
+			{
+				const FVector2D SpeedRange(0.f, BlasterCharacter->GetDefaultJogSpeed());
+				const FVector2D VelocityMultiplierRange(0.f, 1.f);
+				FVector Velocity = BlasterCharacter->GetVelocity();
+				Velocity.Z = 0.f;
+				CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(SpeedRange, VelocityMultiplierRange, Velocity.Size());
+
+				if (BlasterCharacter->GetCharacterMovement()->IsFalling())
+				{
+					CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 2.f, DeltaTime, 1.f);
+				}
+				else
+				{
+					CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 1.f);
+				}
+				
+				HUDPackage.CrosshairSpread = CrosshairVelocityFactor + CrosshairInAirFactor;
+			}
+			
+			OwningHUD->SetHUDPackage(HUDPackage);
+		}
+	}
+}
+
+void UCombatComponent::ServerSetAiming_Implementation(const bool bNewAiming)
+{
+	bIsAiming = bNewAiming;
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)

@@ -25,14 +25,16 @@ public:
 	ABlasterCharacter();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void PostInitializeComponents() override;
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
-
 	bool IsWeaponEquipped() const;
 	bool IsAiming() const;
 	AWeapon* GetEquippedWeapon() const;
+	void PlayFireMontage();
+
+	FVector GetHitTarget() const;
 
 protected:
 	// Called when the game starts or when spawned
@@ -56,8 +58,20 @@ protected:
 	void AimButtonReleased();
 
 	void AimOffset(float DeltaSeconds);
+
+	void FireButtonPressed();
+	void FireButtonReleased();
+
+	void WalkButtonPressed();
+	void WalkButtonReleased();
 	
 private:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	float DefaultJogSpeed;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	float DefaultWalkSpeed;
+	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -98,6 +112,14 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* AimAction;
 
+	/** Fire Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* FireAction;
+
+	/** Walk Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* WalkAction;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
 	class UWidgetComponent* OverheadWidget;
 
@@ -106,6 +128,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCombatComponent> Combat;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TObjectPtr<UAnimMontage> FireWeaponMontage;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
@@ -129,5 +154,6 @@ public:
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE float GetAOYaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAOPitch() const { return AO_Pitch; }
+	FORCEINLINE float GetDefaultJogSpeed() const { return DefaultJogSpeed; }
 	FORCEINLINE ETurnInPlaceDirection GetTurnInPlaceDirection() const { return TurnInPlaceDirection; }
 };
