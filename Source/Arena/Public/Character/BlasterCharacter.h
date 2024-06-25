@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Arena/ArenaTypes/TurnInPlace.h"
 #include "GameFramework/Character.h"
+#include "Interfaces/InteractWithCrosshairInterface.h"
 #include "BlasterCharacter.generated.h"
 
 class UCombatComponent;
@@ -16,7 +17,7 @@ class UInputAction;
 struct FInputActionValue;
 
 UCLASS()
-class ARENA_API ABlasterCharacter : public ACharacter
+class ARENA_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairInterface
 {
 	GENERATED_BODY()
 
@@ -27,13 +28,16 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void PostInitializeComponents() override;
+	virtual void OnRep_ReplicatedMovement() override;
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped() const;
 	bool IsAiming() const;
 	AWeapon* GetEquippedWeapon() const;
+	
 	void PlayFireMontage();
-
+	void PlayHitReactMontage();
+	
 	FVector GetHitTarget() const;
 
 protected:
@@ -57,7 +61,9 @@ protected:
 	void AimButtonPressed();
 	void AimButtonReleased();
 
+	void CalculateAOPitch();
 	void AimOffset(float DeltaSeconds);
+	void SimProxiesTurn();
 
 	void FireButtonPressed();
 	void FireButtonReleased();
@@ -71,6 +77,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	float DefaultWalkSpeed;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	float CameraThreshold = 200.f;
 	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -132,6 +141,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	TObjectPtr<UAnimMontage> FireWeaponMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TObjectPtr<UAnimMontage> HitReactMontage;
+
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
 
@@ -147,7 +159,16 @@ private:
 	FRotator StartingAimRotation;
 	ETurnInPlaceDirection TurnInPlaceDirection;
 
+	bool bRotateRootBone;
+	float TurnThreshold = 0.5f;
+	float ProxyYawDelta = 0.0f;
+	float TimeSinceLastMovementReplication = 0.0f;
+	FRotator ProxyRotationLastFrame;
+	FRotator ProxyRotation;
+
 	void TurnInPlace(float DeltaSeconds);
+
+	void HideCharacterIfCameraClose();
 
 public:
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
@@ -156,4 +177,5 @@ public:
 	FORCEINLINE float GetAOPitch() const { return AO_Pitch; }
 	FORCEINLINE float GetDefaultJogSpeed() const { return DefaultJogSpeed; }
 	FORCEINLINE ETurnInPlaceDirection GetTurnInPlaceDirection() const { return TurnInPlaceDirection; }
+	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 };

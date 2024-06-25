@@ -51,6 +51,17 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	TSubclassOf<ACasing> CasingClass;
 
+	/*
+	 * Zoomed FOV
+	 */
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	float ZoomedFOV = 30.f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon", meta = (ClampMin = 0.1, ClampMax = 100))
+	float ZoomInterpSpeed = 20.f;
+	
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -84,4 +95,6 @@ public:
 	FORCEINLINE void SetWeaponState(const EWeaponState State) { WeaponState = State; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 };

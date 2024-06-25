@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "HUD/BlasterHUD.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGTH 80000.f
 
-class ABlasterHUD;
 class ABlasterPlayerController;
 class AWeapon;
 class ABlasterCharacter;
@@ -35,7 +35,8 @@ protected:
 	virtual void BeginPlay() override;
 	
 	void SetAiming(bool bNewAiming);
-	
+
+	void Fire();
 	void FireButtonPressed(bool bPressed);
 
 	void SetHUDCrosshair(float DeltaTime);
@@ -57,12 +58,28 @@ private:
 
 	float CrosshairVelocityFactor = 0.f;
 	float CrosshairInAirFactor = 0.f;
+	float CrosshairAimFactor = 0.f;
+	float CrosshairShootingFactor = 0.f;
 
 	FVector HitTarget;
 	
 	TObjectPtr<ABlasterCharacter> OwningCharacter;
 	TObjectPtr<ABlasterPlayerController> OwningController;
 	TObjectPtr<ABlasterHUD> OwningHUD;
+	FHUDPackage HUDPackage;
+
+	/*
+	 * Aiming and FOV
+	 */
+
+	float DefaultFOV;
+	float CurrentFOV;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	float ZoomedFOV = 30.f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon", meta = (ClampMin = 0.1, ClampMax = 100))
+	float ZoomInterpSpeed = 20.f;
 
 	UPROPERTY(Replicated, ReplicatedUsing = OnRep_EquippedWeapon)
 	TObjectPtr<AWeapon> EquippedWeapon;
@@ -70,5 +87,23 @@ private:
 	UPROPERTY(Replicated)
 	bool bIsAiming;
 
-	void TraceUnderCrosshair(FHitResult& HitResult) const;
+	void TraceUnderCrosshair(FHitResult& HitResult);
+
+	void InterpFOV(float DeltaTime);
+
+	/*
+	 * Auto fire
+	 */
+	FTimerHandle FireTimer;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon", meta = (ClampMin = 0.1, ClampMax = 10))
+	float FireDelay = .15f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	bool bAutomatic = true;
+
+	bool bCanFire = true;
+
+	void StartFireTimer();
+	void FireTimerFinished();
 };

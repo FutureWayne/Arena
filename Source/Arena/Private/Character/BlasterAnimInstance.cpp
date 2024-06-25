@@ -40,6 +40,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bAiming = BlasterCharacter->IsAiming();
 	EquippedWeapon = BlasterCharacter->GetEquippedWeapon();
 	TurnInPlace = BlasterCharacter->GetTurnInPlaceDirection();
+	bRotateRootBone = BlasterCharacter->ShouldRotateRootBone();
 
 	// Offset yaw for strafing
 	FRotator AimRotation = BlasterCharacter->GetBaseAimRotation();
@@ -71,7 +72,8 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		{
 			bLocallyControlled = true;
 			FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("hand_r"), RTS_World);
-			RightHandRotation = UKismetMathLibrary::FindLookAtRotation(BlasterCharacter->GetHitTarget(), RightHandTransform.GetLocation());
+			FRotator LookAtRotator = UKismetMathLibrary::FindLookAtRotation(BlasterCharacter->GetHitTarget(), RightHandTransform.GetLocation());
+			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotator, DeltaSeconds, 30.0f);
 		}
 	}
 }
