@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Casing.generated.h"
 
+class USoundCue;
+
 UCLASS()
 class ARENA_API ACasing : public AActor
 {

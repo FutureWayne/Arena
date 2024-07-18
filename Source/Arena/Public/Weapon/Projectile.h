@@ -7,6 +7,7 @@
 #include "Projectile.generated.h"
 
 class UProjectileMovementComponent;
+class USoundCue;
 
 UCLASS()
 class ARENA_API AProjectile : public AActor
