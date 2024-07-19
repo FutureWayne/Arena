@@ -9,7 +9,7 @@
 
 #define TRACE_LENGTH 80000.f
 
-class ABlasterPlayerController;
+class AArenaPlayerController;
 class AWeapon;
 class ABlasterCharacter;
 
@@ -64,7 +64,7 @@ private:
 	FVector HitTarget;
 	
 	TObjectPtr<ABlasterCharacter> OwningCharacter;
-	TObjectPtr<ABlasterPlayerController> OwningController;
+	TObjectPtr<AArenaPlayerController> OwningController;
 	TObjectPtr<ABlasterHUD> OwningHUD;
 	FHUDPackage HUDPackage;
 

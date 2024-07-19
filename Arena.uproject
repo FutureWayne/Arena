@@ -10,7 +10,8 @@
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
 				"Engine",
-				"UMG"
+				"UMG",
+				"GameplayAbilities"
 			]
 		}
 	],
@@ -28,6 +29,10 @@
 		},
 		{
 			"Name": "MotionTrajectory",
+			"Enabled": true
+		},
+		{
+			"Name": "GameplayAbilities",
 			"Enabled": true
 		}
 	]

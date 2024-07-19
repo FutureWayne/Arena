@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/PlayerController.h"
-#include "BlasterPlayerController.generated.h"
+#include "AbilitySystemComponent.h"
+#include "ArenaAbilitySystemComponent.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class ARENA_API ABlasterPlayerController : public APlayerController
+class ARENA_API UArenaAbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
 	
