@@ -4,7 +4,9 @@
 #include "Character/ArenaCharacter.h"
 
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/ArenaHealthSet.h"
 #include "Player/ArenaPlayerState.h"
+#include "UI/HUD/ArenaHUD.h"
 
 AArenaCharacter::AArenaCharacter()
 {
@@ -35,4 +37,12 @@ void AArenaCharacter::InitAbilityActorInfo()
 	PS->GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);
 	AbilitySystemComponent = PS->GetAbilitySystemComponent();
 	ArenaHealthSet = PS->GetArenaHealthSet();
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (AArenaHUD* HUD = Cast<AArenaHUD>(PC->GetHUD()))
+		{
+			HUD->InitOverlay(PC, PS, AbilitySystemComponent, ArenaHealthSet.Get());
+		}
+	}
 }
