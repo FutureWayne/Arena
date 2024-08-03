@@ -5,6 +5,7 @@
 
 #include "AbilitySystem/ArenaAbilitySystemComponent.h"
 #include "AbilitySystem/ArenaHealthSet.h"
+#include "Character/ArenaHealthComponent.h"
 
 AArenaMinion::AArenaMinion()
 {
@@ -20,4 +21,7 @@ void AArenaMinion::BeginPlay()
 	Super::BeginPlay();
 
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+	UArenaAbilitySystemComponent* ArenaASC = GetArenaAbilitySystemComponent();
+	HealthComponent->InitializeWithAbilitySystem(ArenaASC);
 }

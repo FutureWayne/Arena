@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/ArenaHealthSet.h"
+#include "Character/ArenaHealthComponent.h"
 #include "Player/ArenaPlayerState.h"
 #include "UI/HUD/ArenaHUD.h"
 
@@ -45,4 +46,7 @@ void AArenaCharacter::InitAbilityActorInfo()
 			HUD->InitOverlay(PC, PS, AbilitySystemComponent, ArenaHealthSet.Get());
 		}
 	}
+
+	UArenaAbilitySystemComponent* ArenaASC = GetArenaAbilitySystemComponent();
+	HealthComponent->InitializeWithAbilitySystem(ArenaASC);
 }

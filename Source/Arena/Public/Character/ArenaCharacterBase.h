@@ -7,6 +7,8 @@
 #include "AbilitySystemInterface.h"
 #include "ArenaCharacterBase.generated.h"
 
+class UArenaAbilitySystemComponent;
+class UArenaHealthComponent;
 class UArenaHealthSet;
 class UAbilitySystemComponent;
 class UAttributeSet;
@@ -20,6 +22,9 @@ public:
 	// Sets default values for this character's properties
 	AArenaCharacterBase();
 
+	UFUNCTION(BlueprintCallable, Category = "Arena|Character")
+	UArenaAbilitySystemComponent* GetArenaAbilitySystemComponent() const;
+	
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UArenaHealthSet* GetArenaHealthSet() const;
 
@@ -32,6 +37,9 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UArenaHealthSet> ArenaHealthSet;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Arena|Character", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UArenaHealthComponent> HealthComponent;
 
 public:	
 	// Called every frame
@@ -39,5 +47,5 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
+	
 };

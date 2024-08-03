@@ -15,10 +15,10 @@ class ARENA_API UCharacterOverlay : public UArenaUserWidget
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY()
 	TObjectPtr<class UProgressBar> HealthBar;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY()
 	TObjectPtr<class UTextBlock> HealthText;
 
 protected:

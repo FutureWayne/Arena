@@ -9,21 +9,21 @@
 
 void UCharacterOverlay::OnHealthChanged(const float NewHealth)
 {
-	Health = NewHealth;
-	HealthBar->SetPercent(Health / MaxHealth);
-	HealthText->SetText(FText::FromString(FString::Printf(TEXT("%.0f / %.0f"), Health, MaxHealth)));
+	// Health = NewHealth;
+	// HealthBar->SetPercent(Health / MaxHealth);
+	// HealthText->SetText(FText::FromString(FString::Printf(TEXT("%.0f / %.0f"), Health, MaxHealth)));
 }
 
 void UCharacterOverlay::OnMaxHealthChanged(const float NewMaxHealth)
 {
-	MaxHealth = NewMaxHealth;
-	HealthBar->SetPercent(Health / MaxHealth);
-	HealthText->SetText(FText::FromString(FString::Printf(TEXT("%.0f / %.0f"), Health, MaxHealth)));
+	// MaxHealth = NewMaxHealth;
+	// HealthBar->SetPercent(Health / MaxHealth);
+	// HealthText->SetText(FText::FromString(FString::Printf(TEXT("%.0f / %.0f"), Health, MaxHealth)));
 }
 
 void UCharacterOverlay::OnWidgetControllerSet_Implementation()
 {
-	UOverlayWidgetController* OverlayWidgetController = CastChecked<UOverlayWidgetController>(WidgetController);
-	OverlayWidgetController->OnHealthChanged.AddDynamic(this, &UCharacterOverlay::OnHealthChanged);
-	OverlayWidgetController->OnMaxHealthChanged.AddDynamic(this, &UCharacterOverlay::OnMaxHealthChanged);
+	// UOverlayWidgetController* OverlayWidgetController = CastChecked<UOverlayWidgetController>(WidgetController);
+	// OverlayWidgetController->OnHealthChanged.AddDynamic(this, &UCharacterOverlay::OnHealthChanged);
+	// OverlayWidgetController->OnMaxHealthChanged.AddDynamic(this, &UCharacterOverlay::OnMaxHealthChanged);
 }
