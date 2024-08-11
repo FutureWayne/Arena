@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/HUD.h"
+#include "UI/HUD/ArenaHUD.h"
 #include "BlasterHUD.generated.h"
 
 class UCharacterOverlay;
@@ -28,22 +28,15 @@ public:
  * 
  */
 UCLASS()
-class ARENA_API ABlasterHUD : public AHUD
+class ARENA_API ABlasterHUD : public AArenaHUD
 {
 	GENERATED_BODY()
 
 public:
 	virtual void DrawHUD() override;
 
-	UPROPERTY(EditAnywhere, Category = "PlayerStats")
-	TSubclassOf<UUserWidget> CharacterOverlayClass;
-	
-	TObjectPtr<UCharacterOverlay> CharacterOverlay;
-
 protected:
 	virtual void BeginPlay() override;
-
-	void AddCharacterOverlay();
 	
 private:
 	FHUDPackage HUDPackage;

@@ -11,7 +11,7 @@
 #include "HUD/BlasterHUD.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
-#include "PlayerController/BlasterPlayerController.h"
+#include "PlayerController/ArenaPlayerController.h"
 #include "Weapon/Weapon.h"
 
 UCombatComponent::UCombatComponent()
@@ -226,7 +226,7 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 
 	if (OwningController == nullptr)
 	{
-		OwningController = Cast<ABlasterPlayerController>(OwningCharacter->Controller);
+		OwningController = Cast<AArenaPlayerController>(OwningCharacter->Controller);
 	}
 	
 	if (OwningController)

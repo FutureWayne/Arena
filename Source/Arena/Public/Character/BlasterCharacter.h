@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ArenaCharacter.h"
 #include "Arena/ArenaTypes/TurnInPlace.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/InteractWithCrosshairInterface.h"
@@ -17,7 +18,7 @@ class UInputAction;
 struct FInputActionValue;
 
 UCLASS()
-class ARENA_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairInterface
+class ARENA_API ABlasterCharacter : public AArenaCharacter, public IInteractWithCrosshairInterface
 {
 	GENERATED_BODY()
 

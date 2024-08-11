@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.4",
+	"EngineAssociation": "{3B824F3C-409B-3790-FC31-779B582D5010}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -10,7 +10,9 @@
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
 				"Engine",
-				"UMG"
+				"UMG",
+				"GameplayAbilities",
+				"CoreUObject"
 			]
 		}
 	],
@@ -28,6 +30,10 @@
 		},
 		{
 			"Name": "MotionTrajectory",
+			"Enabled": true
+		},
+		{
+			"Name": "GameplayAbilities",
 			"Enabled": true
 		}
 	]
